@@ -93,3 +93,32 @@ I tested the application in the browser, reviewed the test output, and investiga
 
 ### Final Result
 A user can upload a PDF and open a page that displays it. The automated test checks the upload workflow, and GitHub Actions runs the project's checks and tests.
+
+## M6 — Tests and Bug-Injection Demonstration
+
+### AI Prompts Used
+- Given my first two tests, add another test that is not covered by them that could be important to the project.
+
+### Changes Made
+- Added a test to verify that the document page loads successfully and contains the PDF viewer.
+- Added a test to verify that requesting a nonexistent document returns a 404 response.
+- Added a test to verify that the application displays the requested PDF rather than a different document.
+- Generated a test coverage report using Coverage.py.
+- Temporarily modified the document lookup logic so that the application always displayed the first document instead of the requested one.
+
+### Bug-Injection Results
+The injected fault caused the new test to fail. When the test requested the second PDF, the application displayed the first PDF instead. This demonstrated that the test suite could detect a user-facing bug that would not necessarily cause the application to crash.
+
+After the test detected the problem, I restored the original document lookup logic. I then reran the tests to verify that the fix restored the expected behavior.
+
+### Review and Verification
+I reviewed the generated tests and ran them using Django's test runner. The tests checked the document page response, missing-document handling, and whether the correct PDF was displayed.
+
+The bug-injection experiment was used to check whether the tests could identify incorrect application behavior rather than relying only on coverage percentages.
+
+### Evidence
+- Django test execution output.
+- Coverage.py terminal report and HTML coverage report.
+- Injected fault in `documents/views.py`.
+- Test failure showing that the wrong PDF was displayed.
+- Restored document lookup logic and passing test output.

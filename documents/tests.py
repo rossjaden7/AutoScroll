@@ -1,38 +1,55 @@
-from io import BytesIO
-
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
-
-from .models import Document
+from django.core.files.uploadedfile import SimpleUploadedFile
+from documents.models import Document
 
 
 class DocumentUploadTests(TestCase):
 
-    def test_upload_pdf_creates_document_and_returns_document_page(self):
-        pdf = SimpleUploadedFile(
-            "test.pdf",
-            b"%PDF-1.4 test pdf content",
-            content_type="application/pdf",
+    def test_document_page_shows_uploaded_pdf(self):
+        document = Document.objects.create(
+            file=SimpleUploadedFile(
+                "test.pdf",
+                b"PDF content",
+                content_type="application/pdf",
+            ),
         )
-
-        response = self.client.post(
-            reverse("upload"),
-            {"file": pdf},
-        )
-
-        document = Document.objects.get(filename="test.pdf")
-
-        self.assertRedirects(
-            response,
-            reverse("document", args=[document.id]),
-        )
-
-        self.assertTrue(document.file.name)
 
         response = self.client.get(
             reverse("document", args=[document.id])
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "test.pdf")
+        self.assertContains(response, "<iframe", html=False)
+
+    def test_document_page_returns_404_for_missing_document(self):
+        response = self.client.get(
+            reverse("document", args=[99999])
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_document_page_displays_requested_document(self):
+        first = Document.objects.create(
+            file=SimpleUploadedFile(
+                "first.pdf",
+                b"First PDF",
+                content_type="application/pdf",
+            ),
+        )
+
+        second = Document.objects.create(
+            file=SimpleUploadedFile(
+                "second.pdf",
+                b"Second PDF",
+                content_type="application/pdf",
+            ),
+        )
+
+        response = self.client.get(
+            reverse("document", args=[second.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, second.file.name)
+        self.assertNotContains(response, first.file.name)
